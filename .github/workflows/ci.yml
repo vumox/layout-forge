@@ -17,3 +17,16 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+        env:
+          BASE_PATH: /layout-forge/
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          BASE_PATH: /layout-forge/
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/

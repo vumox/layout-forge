@@ -37,6 +37,7 @@ import {
   WavesIcon,
 } from "lucide-react"
 import { parseHash, writeHash } from "@/lib/route"
+import { TOOL_GROUPS } from "@/lib/tool-catalog"
 import { usePersistent } from "@/lib/use-persistent"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -83,79 +84,48 @@ interface Tool {
   view: ComponentType
 }
 
-const GROUPS: { title: string; tools: Tool[] }[] = [
-  {
-    title: "Backgrounds",
-    tools: [
-      { id: "mesh", label: "Mesh gradient", icon: DropletsIcon, view: MeshTool },
-      { id: "pattern", label: "Patterns", icon: Grid3x3Icon, view: PatternTool },
-      { id: "scatter", label: "Shape backgrounds", icon: ShapesIcon, view: ScatterTool },
-      { id: "topo", label: "Contours", icon: MountainIcon, view: TopoTool },
-      { id: "burst", label: "Rays and spirals", icon: SunIcon, view: BurstTool },
-      { id: "aurora", label: "Aurora", icon: CloudMoonIcon, view: AuroraTool },
-      { id: "lava", label: "Lava lamp", icon: FlameIcon, view: LavaTool },
-      { id: "image", label: "Photo as background", icon: ImageIcon, view: ImageTool },
-    ],
-  },
-  {
-    title: "Generative",
-    tools: [
-      { id: "bauhaus", label: "Bauhaus grids", icon: PuzzleIcon, view: BauhausTool },
-      { id: "lowpoly", label: "Low-poly / Voronoi", icon: GemIcon, view: LowPolyTool },
-      { id: "flow", label: "Flow field", icon: WindIcon, view: FlowTool },
-      { id: "dither", label: "Dither and halftone", icon: ScanLineIcon, view: DitherTool },
-      { id: "ascii", label: "ASCII art", icon: TerminalIcon, view: AsciiTool },
-      { id: "pixel", label: "Pixel-art", icon: Gamepad2Icon, view: PixelTool },
-      { id: "synth", label: "Synthwave", icon: SunsetIcon, view: SynthTool },
-    ],
-  },
-  {
-    title: "Shapes and decor",
-    tools: [
-      { id: "divider", label: "Dividers", icon: SlashIcon, view: DividerTool },
-      { id: "wave", label: "Waves", icon: WavesIcon, view: WaveTool },
-      { id: "blob", label: "Blob", icon: CircleDashedIcon, view: BlobTool },
-      { id: "clip", label: "clip-path", icon: ScissorsIcon, view: ClipPathTool },
-      { id: "line", label: "Lines and squiggles", icon: SparkleIcon, view: LineTool },
-      { id: "arrow", label: "Arrows", icon: ArrowUpRightIcon, view: ArrowTool },
-    ],
-  },
-  {
-    title: "Effects",
-    tools: [
-      { id: "glass", label: "Glassmorphism", icon: GlassWaterIcon, view: GlassTool },
-      { id: "mask", label: "CSS mask", icon: SquareDashedIcon, view: MaskTool },
-      { id: "fx", label: "CSS effects", icon: WandSparklesIcon, view: EffectsTool },
-      { id: "shadow", label: "Shadows", icon: BlendIcon, view: ShadowTool },
-    ],
-  },
-  {
-    title: "3D and motion",
-    tools: [
-      { id: "three", label: "3D scenes", icon: BoxIcon, view: ThreeTool },
-      { id: "animation", label: "CSS animations", icon: TimerIcon, view: AnimationTool },
-      { id: "particles", label: "Particles", icon: SnowflakeIcon, view: ParticlesTool },
-      { id: "scroll", label: "Scroll video", icon: ClapperboardIcon, view: ScrollVideoTool },
-    ],
-  },
-  {
-    title: "Media and assets",
-    tools: [
-      { id: "mockup", label: "Mockups", icon: LaptopIcon, view: MockupTool },
-      { id: "og", label: "OG images", icon: ShareIcon, view: OgTool },
-      { id: "favicon", label: "Favicon", icon: AppWindowIcon, view: FaviconTool },
-    ],
-  },
-  {
-    title: "Typography",
-    tools: [{ id: "units", label: "Font units", icon: RulerIcon, view: UnitsTool }],
-  },
-]
+const VIEWS: Record<string, Pick<Tool, "icon" | "view">> = {
+  mesh: { icon: DropletsIcon, view: MeshTool },
+  pattern: { icon: Grid3x3Icon, view: PatternTool },
+  scatter: { icon: ShapesIcon, view: ScatterTool },
+  topo: { icon: MountainIcon, view: TopoTool },
+  burst: { icon: SunIcon, view: BurstTool },
+  aurora: { icon: CloudMoonIcon, view: AuroraTool },
+  lava: { icon: FlameIcon, view: LavaTool },
+  image: { icon: ImageIcon, view: ImageTool },
+  bauhaus: { icon: PuzzleIcon, view: BauhausTool },
+  lowpoly: { icon: GemIcon, view: LowPolyTool },
+  flow: { icon: WindIcon, view: FlowTool },
+  dither: { icon: ScanLineIcon, view: DitherTool },
+  ascii: { icon: TerminalIcon, view: AsciiTool },
+  pixel: { icon: Gamepad2Icon, view: PixelTool },
+  synth: { icon: SunsetIcon, view: SynthTool },
+  divider: { icon: SlashIcon, view: DividerTool },
+  wave: { icon: WavesIcon, view: WaveTool },
+  blob: { icon: CircleDashedIcon, view: BlobTool },
+  clip: { icon: ScissorsIcon, view: ClipPathTool },
+  line: { icon: SparkleIcon, view: LineTool },
+  arrow: { icon: ArrowUpRightIcon, view: ArrowTool },
+  glass: { icon: GlassWaterIcon, view: GlassTool },
+  mask: { icon: SquareDashedIcon, view: MaskTool },
+  fx: { icon: WandSparklesIcon, view: EffectsTool },
+  shadow: { icon: BlendIcon, view: ShadowTool },
+  three: { icon: BoxIcon, view: ThreeTool },
+  animation: { icon: TimerIcon, view: AnimationTool },
+  particles: { icon: SnowflakeIcon, view: ParticlesTool },
+  scroll: { icon: ClapperboardIcon, view: ScrollVideoTool },
+  mockup: { icon: LaptopIcon, view: MockupTool },
+  og: { icon: ShareIcon, view: OgTool },
+  favicon: { icon: AppWindowIcon, view: FaviconTool },
+  units: { icon: RulerIcon, view: UnitsTool },
+}
+
+const GROUPS = TOOL_GROUPS.map((group) => ({ ...group, tools: group.tools.map((tool) => ({ ...tool, ...VIEWS[tool.id] })) }))
 
 const ALL = GROUPS.flatMap((g) => g.tools)
 
 export function ToolsView() {
-  const [s, set] = usePersistent("lf-tools", { tool: "mesh", collapsed: false })
+  const [s, set] = usePersistent("lf-tools", { tool: "mesh", collapsed: false }, (stored) => ({ ...stored, tool: parseHash(location.hash).tool ?? stored.tool }))
   const tool = ALL.find((t) => t.id === s.tool) ?? ALL[0]
 
   useEffect(() => {

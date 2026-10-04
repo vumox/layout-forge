@@ -1,5 +1,6 @@
 import { produce } from "immer"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
+import { rememberState, sharedState } from "@/lib/share"
 import { normalizeDraft } from "@/layout/tree"
 import type { LayoutNode } from "@/layout/types"
 
@@ -25,7 +26,16 @@ function load(key: string): LayoutNode | null {
 }
 
 export function useLayoutDoc(storageKey: string, initial: () => LayoutNode) {
-  const [h, setH] = useState<History>(() => ({ past: [], present: load(storageKey) ?? initial(), future: [], lastTime: 0 }))
+  const [h, setH] = useState<History>(() => ({ past: [], present: sharedState(storageKey, initial()) ?? load(storageKey) ?? initial(), future: [], lastTime: 0 }))
+  useLayoutEffect(() => rememberState(storageKey, h.present), [storageKey, h.present])
+  useEffect(() => {
+    const onHash = () => {
+      const shared = sharedState(storageKey, initial())
+      if (shared) setH({ past: [], present: shared, future: [], lastTime: 0 })
+    }
+    addEventListener("hashchange", onHash)
+    return () => removeEventListener("hashchange", onHash)
+  }, [storageKey, initial])
 
   useEffect(() => {
     const t = setTimeout(() => {

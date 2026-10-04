@@ -5,6 +5,15 @@ import "./index.css"
 import App from "./App.tsx"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { registerSW } from "virtual:pwa-register"
+import { toast } from "sonner"
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    toast("An update is ready", { duration: Infinity, action: { label: "Reload", onClick: () => { void updateSW(true) } } })
+  },
+  onOfflineReady() { toast.success("Layout Forge is ready to use offline") },
+})
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

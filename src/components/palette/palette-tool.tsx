@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useState } from "react"
+import { rememberState, sharedState } from "@/lib/share"
 import { ImageUpIcon, MoonIcon, PlusIcon, ShuffleIcon, SunIcon, Trash2Icon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import { type Extracted, extractColors, pickBase } from "@/lib/extract"
@@ -49,6 +50,8 @@ const QUICK = ["#6d4aff", "#2563eb", "#0ea5e9", "#10b981", "#84cc16", "#f59e0b",
 const KEY = "lf-palette"
 
 function load(): PaletteState {
+  const shared = sharedState(KEY, DEFAULTS)
+  if (shared) return shared
   try {
     const raw = localStorage.getItem(KEY)
     return raw ? { ...DEFAULTS, ...(JSON.parse(raw) as Partial<PaletteState>) } : DEFAULTS
@@ -174,6 +177,15 @@ function ImageSource({ onBase, onAddAll }: { onBase: (hex: string) => void; onAd
 
 export function PaletteTool() {
   const [s, setS] = useState<PaletteState>(load)
+  useLayoutEffect(() => rememberState(KEY, s), [s])
+  useEffect(() => {
+    const onHash = () => {
+      const shared = sharedState(KEY, DEFAULTS)
+      if (shared) setS(shared)
+    }
+    addEventListener("hashchange", onHash)
+    return () => removeEventListener("hashchange", onHash)
+  }, [])
   const { resolvedTheme } = useTheme()
   const [mode, setMode] = useState<"light" | "dark">(resolvedTheme)
   const set = (patch: Partial<PaletteState>) => setS((prev) => ({ ...prev, ...patch }))

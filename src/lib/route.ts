@@ -6,7 +6,7 @@ export interface Route {
 }
 
 export function parseHash(hash: string): Route {
-  const [a, b] = hash.replace(/^#\/?/, "").split("/")
+  const [a, b] = hash.split("?")[0].replace(/^#\/?/, "").split("/")
   if (!a) return { tab: null, tool: null }
   if (a === "tools") return { tab: "tools", tool: b || null }
   if ((TABS as readonly string[]).includes(a)) return { tab: a, tool: null }
@@ -15,5 +15,9 @@ export function parseHash(hash: string): Route {
 
 export function writeHash(tab: string, tool?: string) {
   const next = tab === "tools" && tool ? `#tools/${tool}` : `#${tab}`
-  if (location.hash !== next) history.replaceState(null, "", next)
+  if (location.hash.split("?")[0] !== next) history.replaceState(null, "", next)
+}
+
+export function navigateTo(hash: string) {
+  location.hash = hash
 }

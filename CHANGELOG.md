@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0
+
+- Copy link with compressed, versioned state for layouts, palettes and generators.
+- Ctrl+K / ⌘K command palette for all 36 tools.
+- Installable PWA, offline precaching and an explicit update/reload prompt.
+- Static SEO guides for mesh gradients, clip-path, glassmorphism and CSS Grid; sitemap, robots and JSON-LD.
+- Six tool GIFs, reproducible media scripts, README comparison and dynamic badges.
+- Roadmap and community feedback entry points.
+- Playwright CI smoke tests for startup, sharing, search, offline usage, SEO and mobile actions.
+- GitHub Pages deployment follows a successful CI run.
+
 ## 1.1.0
 
 - Deep links to every tool via the URL hash (`#grid`, `#flex`, `#palette`, `#tools/mesh`).

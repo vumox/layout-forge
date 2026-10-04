@@ -6,6 +6,7 @@ import { rootNode } from "@/layout/defaults"
 import { useLayoutDoc } from "@/layout/store"
 import { IconButton } from "@/components/fields"
 import { SocialLinks } from "@/components/social-links"
+import { AppActions } from "@/components/app-actions"
 import { LayoutEditor } from "@/components/layout/layout-editor"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -60,7 +61,7 @@ export default function App() {
 
   return (
     <Tabs value={tab} onValueChange={(v) => changeTab(v as string)} className="flex h-dvh flex-col gap-0 bg-background">
-      <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
+      <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-1 border-b px-2 py-1 sm:gap-3 sm:px-3">
         <div className="flex items-center gap-2">
           <div className="grid size-7 grid-cols-2 gap-0.5 rounded-lg bg-primary p-1.5">
             <span className="rounded-[2px] bg-primary-foreground" />
@@ -70,7 +71,7 @@ export default function App() {
           <span className="hidden text-sm font-semibold tracking-tight sm:inline">Layout Forge</span>
           <SocialLinks />
         </div>
-        <TabsList className="mx-auto">
+        <TabsList className="order-last mx-auto w-full justify-center sm:order-none sm:w-fit">
           <TabsTrigger value="grid" className="px-3">
             <LayoutGridIcon />
             Grid
@@ -88,6 +89,7 @@ export default function App() {
             Generators
           </TabsTrigger>
         </TabsList>
+        <AppActions />
         <ThemeToggle />
       </header>
       <TabsContent value="grid" className="min-h-0">

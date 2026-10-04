@@ -1,7 +1,9 @@
 name: Deploy demo
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
     branches: [main]
+    types: [completed]
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,18 +14,27 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - if: github.event_name == 'workflow_dispatch'
+        run: npm run typecheck && npm run lint && npm test
       - run: npm run build
+        env:
+          BASE_PATH: /layout-forge/
+      - if: github.event_name == 'workflow_dispatch'
+        run: npx playwright install --with-deps chromium && npm run test:e2e
         env:
           BASE_PATH: /layout-forge/
       - run: cp dist/index.html dist/404.html
