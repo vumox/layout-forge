@@ -15,9 +15,9 @@ Help decide what comes next in [Discussions](https://github.com/vumox/layout-for
 ## Next: reliability and accessibility
 
 - [ ] Expand layout-engine tests: [#7](https://github.com/vumox/layout-forge/issues/7).
-- [ ] Resolve mockup editor React purity/ref warnings: [#8](https://github.com/vumox/layout-forge/issues/8).
+- [x] Resolve mockup editor React purity/ref warnings: [#8](https://github.com/vumox/layout-forge/issues/8).
 - [ ] Improve canvas keyboard and screen-reader access: [#9](https://github.com/vumox/layout-forge/issues/9).
-- [ ] Split the three.js bundle: [#11](https://github.com/vumox/layout-forge/issues/11).
+- [x] Reduce the three.js preview bundle by limiting runtime exports: [#11](https://github.com/vumox/layout-forge/issues/11). The chunk is about 588 kB and still exceeds the build warning threshold.
 - [ ] Add sharing fixtures and browser coverage for more generators and complex responsive layouts.
 
 ## Explore with the community

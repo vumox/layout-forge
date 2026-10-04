@@ -11,6 +11,10 @@
 - Playwright CI smoke tests for startup, sharing, search, offline usage, SEO and mobile actions.
 - GitHub Pages deployment follows a successful CI run.
 - Reduce the 3D tool bundle by importing only the Three.js exports used by its scene runtime.
+- Fix mockup undo/redo availability without reading refs during rendering.
+- Add layout-engine regression tests and browser coverage for all ten 3D presets and mockup history/PNG export.
+- Fix Copy link for the mockup editor's versioned state key.
+- Update GitHub Actions and Node.js typings; defer the TypeScript 7 migration while its CI is failing.
 
 ## 1.1.0
 
