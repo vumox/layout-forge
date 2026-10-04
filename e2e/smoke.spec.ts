@@ -41,7 +41,7 @@ test("command palette supports keyboard, empty results and Escape", async ({ pag
   await expect(page).toHaveURL(/#grid$/)
 })
 
-for (const route of ["tools/mesh", "tools/clip", "tools/glass", "grid", "flex", "palette"]) {
+for (const route of ["tools/mesh", "tools/clip", "tools/glass", "tools/mockup", "grid", "flex", "palette"]) {
   test(`shared state round trip: ${route}`, async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"])
     await page.goto(`./#${route}`)
@@ -55,6 +55,7 @@ for (const route of ["tools/mesh", "tools/clip", "tools/glass", "grid", "flex", 
     if (route === "tools/mesh") await page.getByRole("button", { name: "Random", exact: true }).click()
     if (route === "tools/clip") await page.getByRole("button", { name: "Hexagon", exact: true }).click()
     if (route === "tools/glass") await page.getByRole("button", { name: "Colored", exact: true }).click()
+    if (route === "tools/mockup") await page.locator("section").filter({ has: page.getByRole("heading", { name: "Add to scene", exact: true }) }).getByRole("button", { name: "Phone", exact: true }).click()
     if (route === "palette") await page.getByRole("button", { name: "#2563eb", exact: true }).click()
     const before = await page.locator("pre").allTextContents()
     await page.getByRole("button", { name: "Copy link", exact: true }).click()

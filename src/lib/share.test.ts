@@ -18,3 +18,12 @@ test("an active tool's current settings round trip through a share link", () => 
   expect(sharedState("lf-tool-mesh", state)).toEqual(state)
   expect(sharedState("lf-tool-glass", state)).toBeNull()
 })
+
+test("mockup links use the editor's existing versioned storage key", () => {
+  vi.stubGlobal("location", { hash: "#tools/mockup", href: "https://example.com/#tools/mockup" })
+  const state = { items: [{ id: "device", x: 20, y: 80 }], ratio: "16:9" }
+  rememberState("lf-tool-mockup2", state)
+  const link = new URL(createShareLink())
+  vi.stubGlobal("location", { hash: link.hash, href: link.href })
+  expect(sharedState("lf-tool-mockup2", state)).toEqual(state)
+})

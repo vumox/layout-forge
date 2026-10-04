@@ -11,7 +11,8 @@ export function rememberState(key: string, value: unknown) {
 
 function activeKey() {
   const route = parseHash(location.hash)
-  return route.tab === "tools" ? `lf-tool-${route.tool ?? "mesh"}` : `lf-${route.tab}`
+  if (route.tab === "tools") return route.tool === "mockup" ? "lf-tool-mockup2" : `lf-tool-${route.tool ?? "mesh"}`
+  return `lf-${route.tab}`
 }
 
 function compatible(value: unknown, sample: unknown, depth = 0): boolean {
