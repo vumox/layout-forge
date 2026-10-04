@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import * as THREE from "three"
+import * as THREE from "@/lib/three-runtime"
 import { CameraIcon } from "lucide-react"
 import { DEFAULT_THREE, SCENE_PRESETS, type SceneId, type ThreeConfig, exportHtml, exportModule, exportReact, sceneSource } from "@/lib/three-scenes"
 import { usePersistent } from "@/lib/use-persistent"

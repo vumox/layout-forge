@@ -10,6 +10,7 @@
 - Roadmap and community feedback entry points.
 - Playwright CI smoke tests for startup, sharing, search, offline usage, SEO and mobile actions.
 - GitHub Pages deployment follows a successful CI run.
+- Reduce the 3D tool bundle by importing only the Three.js exports used by its scene runtime.
 
 ## 1.1.0
 
