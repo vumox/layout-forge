@@ -1,4 +1,4 @@
-import { createElement, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
+import { createElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
 import {
   AlignEndHorizontalIcon,
   AlignEndVerticalIcon,
@@ -207,6 +207,33 @@ const ADD: { kind: Kind; icon: typeof LaptopIcon }[] = [
   { kind: "shape", icon: SquareIcon },
 ]
 
+function LayerButton({ title, onClick, children, active }: { title: string; onClick: () => void; children: ReactNode; active?: boolean }) {
+  return (
+    <button title={title} onClick={onClick} className={cn("flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&_svg]:size-3.5", active && "text-primary")}>
+      {children}
+    </button>
+  )
+}
+
+function ImageUpload({ label, onFile }: { label: string; onFile: (f: File) => void }) {
+  return (
+    <label className="flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground hover:bg-muted/50">
+      <ImageUpIcon className="size-4" />
+      {label}
+      <input
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => {
+          const f = e.target.files?.[0]
+          if (f) onFile(f)
+          e.target.value = ""
+        }}
+      />
+    </label>
+  )
+}
+
 export function MockupTool() {
   const [s, set] = usePersistent<Scene>("lf-tool-mockup2", DEFAULT)
   const [assets, addAsset] = useAssets()
@@ -215,7 +242,7 @@ export function MockupTool() {
   const [guides, setGuides] = useState<{ x?: number; y?: number }>({})
   const [busy, setBusy] = useState(false)
   const [dragging, setDragging] = useState(false)
-  const [hv, setHv] = useState(0)
+  const [{ canUndo, canRedo }, setHistoryState] = useState({ canUndo: false, canRedo: false })
   const stageRef = useRef<HTMLDivElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
   const sRef = useRef(s)
@@ -241,7 +268,7 @@ export function MockupTool() {
     return () => ro.disconnect()
   }, [W, H])
 
-  const record = (key?: string) => {
+  const record = useCallback((key?: string) => {
     const now = Date.now()
     if (key && lastKey.current?.k === key && now - lastKey.current.t < 700) {
       lastKey.current.t = now
@@ -250,8 +277,8 @@ export function MockupTool() {
     lastKey.current = key ? { k: key, t: now } : null
     hist.current.past = [...hist.current.past.slice(-79), sRef.current.items]
     hist.current.future = []
-    setHv((n) => n + 1)
-  }
+    setHistoryState({ canUndo: hist.current.past.length > 0, canRedo: hist.current.future.length > 0 })
+  }, [])
 
   const commit = (next: Item[], key?: string) => {
     record(key)
@@ -267,7 +294,7 @@ export function MockupTool() {
     hist.current.future.push(sRef.current.items)
     lastKey.current = null
     set({ items: prev })
-    setHv((n) => n + 1)
+    setHistoryState({ canUndo: hist.current.past.length > 0, canRedo: hist.current.future.length > 0 })
   }
 
   const redo = () => {
@@ -276,7 +303,7 @@ export function MockupTool() {
     hist.current.past.push(sRef.current.items)
     lastKey.current = null
     set({ items: next })
-    setHv((n) => n + 1)
+    setHistoryState({ canUndo: hist.current.past.length > 0, canRedo: hist.current.future.length > 0 })
   }
 
   const add = (kind: Kind, over: Partial<Item> = {}) => {
@@ -616,29 +643,6 @@ export function MockupTool() {
     )
   }
 
-  const iconBtn = (title: string, onClick: () => void, children: ReactNode, active?: boolean) => (
-    <button title={title} onClick={onClick} className={cn("flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&_svg]:size-3.5", active && "text-primary")}>
-      {children}
-    </button>
-  )
-
-  const file = (label: string, onFile: (f: File) => void, icon: ReactNode = <ImageUpIcon className="size-4" />) => (
-    <label className="flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground hover:bg-muted/50">
-      {icon}
-      {label}
-      <input
-        type="file"
-        accept="image/*"
-        className="sr-only"
-        onChange={(e) => {
-          const f = e.target.files?.[0]
-          if (f) onFile(f)
-          e.target.value = ""
-        }}
-      />
-    </label>
-  )
-
   const controls = (
     <>
       <Section title="Add to scene">
@@ -670,10 +674,18 @@ export function MockupTool() {
               <button onClick={() => setSelId(i.id)} className="min-w-0 flex-1 truncate py-1.5 text-left text-xs">
                 {i.name}
               </button>
-              {iconBtn("Higher", () => move(i.id, "up"), <ChevronUpIcon />)}
-              {iconBtn("Lower", () => move(i.id, "down"), <ChevronDownIcon />)}
-              {iconBtn(i.locked ? "Unlock" : "Lock", () => patch(i.id, { locked: !i.locked }), i.locked ? <LockIcon /> : <LockOpenIcon />, i.locked)}
-              {iconBtn(i.hidden ? "Show" : "Hide", () => patch(i.id, { hidden: !i.hidden }), i.hidden ? <EyeOffIcon /> : <EyeIcon />, i.hidden)}
+              <LayerButton title="Higher" onClick={() => move(i.id, "up")}>
+                <ChevronUpIcon />
+              </LayerButton>
+              <LayerButton title="Lower" onClick={() => move(i.id, "down")}>
+                <ChevronDownIcon />
+              </LayerButton>
+              <LayerButton title={i.locked ? "Unlock" : "Lock"} onClick={() => patch(i.id, { locked: !i.locked })} active={i.locked}>
+                {i.locked ? <LockIcon /> : <LockOpenIcon />}
+              </LayerButton>
+              <LayerButton title={i.hidden ? "Show" : "Hide"} onClick={() => patch(i.id, { hidden: !i.hidden })} active={i.hidden}>
+                {i.hidden ? <EyeOffIcon /> : <EyeIcon />}
+              </LayerButton>
             </div>
           ))}
           {items.length === 0 && <p className="py-3 text-center text-xs text-muted-foreground">Scene is empty</p>}
@@ -777,7 +789,7 @@ export function MockupTool() {
 
           {HAS_SCREEN.includes(sel.kind) && (
             <Section title="Screen">
-              {file(sel.src ? "Replace screen" : "Upload screenshot", (f) => handleFile(f, sel.id))}
+              <ImageUpload label={sel.src ? "Replace screen" : "Upload screenshot"} onFile={(f) => handleFile(f, sel.id)} />
               {sel.src && (
                 <Button variant="outline" size="xs" onClick={() => patch(sel.id, { src: null })}>
                   Restore demo image
@@ -866,12 +878,12 @@ export function MockupTool() {
         {s.bg === "gradient" && <SliderField label="Angle" value={s.angle} min={0} max={360} unit="°" onChange={(angle) => set({ angle })} />}
         {s.bg === "image" && (
           <>
-            {file(s.bgImage ? "Replace background" : "Upload background", async (f) => {
+            <ImageUpload label={s.bgImage ? "Replace background" : "Upload background"} onFile={async (f) => {
               const { url } = await readImage(f)
               const id = uid()
               addAsset(id, url)
               set({ bgImage: id })
-            })}
+            }} />
             <SliderField label="Background blur" value={s.bgBlur} min={0} max={40} onChange={(bgBlur) => set({ bgBlur })} />
           </>
         )}
@@ -884,10 +896,6 @@ export function MockupTool() {
       </Section>
     </>
   )
-
-  void hv
-  const canUndo = hist.current.past.length > 0
-  const canRedo = hist.current.future.length > 0
 
   return (
     <ToolLayout
