@@ -60,7 +60,9 @@ export function sharedState<T>(key: string, initial: T): T | null {
 export function createShareLink() {
   const state = snapshots.get(activeKey())
   if (!state) throw new Error("The tool is still loading. Please try again.")
-  const encoded = compressToEncodedURIComponent(JSON.stringify({ v: 1, state }))
+  const raw = JSON.stringify({ v: 1, state })
+  if (raw.length > 100000) throw new Error("This result is too large for a link. Export it as a file instead.")
+  const encoded = compressToEncodedURIComponent(raw)
   if (encoded.length > MAX_LENGTH) throw new Error("This result is too large for a link. Export it as a file instead.")
   const url = new URL(location.href)
   url.search = ""
