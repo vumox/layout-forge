@@ -145,7 +145,7 @@ const SHORTCUTS: [string, string][] = [
   ["Frame on empty space", "select multiple points"],
   ["Shape body", "drag the whole shape"],
   ["Ctrl+A · Esc", "select all · deselect"],
-  ["Tab / Shift+Tab", "next / previous point"],
+  ["PageDown / PageUp", "next / previous point"],
   ["Arrows · Shift+arrows", "nudge by step · ×10"],
   ["Delete", "delete selected points"],
   ["Double click", "new point on the edge"],
@@ -491,7 +491,7 @@ export function ClipPathTool() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e)) return
+      if (isTyping(e) || !boxRef.current?.contains(e.target as Node)) return
       const mod = e.ctrlKey || e.metaKey
       const key = e.key.toLowerCase()
       if (mod && key === "z") {
@@ -521,11 +521,12 @@ export function ClipPathTool() {
         }
         return
       }
-      if (e.key === "Tab" && s.shape === "polygon") {
+      if ((e.key === "PageDown" || e.key === "PageUp") && s.shape === "polygon") {
         e.preventDefault()
         const n = s.points.length
-        const cur = selected.length === 1 ? selected[0] : e.shiftKey ? 0 : -1
-        setSelected([(cur + (e.shiftKey ? -1 : 1) + n) % n])
+        const previous = e.key === "PageUp"
+        const cur = selected.length === 1 ? selected[0] : previous ? 0 : -1
+        setSelected([(cur + (previous ? -1 : 1) + n) % n])
         return
       }
       if (e.key.startsWith("Arrow")) {
@@ -707,9 +708,13 @@ export function ClipPathTool() {
       <div className="flex h-full min-h-[460px] touch-none items-center justify-center p-10 pt-16" onPointerDown={startEmpty}>
         <div
           ref={boxRef}
+          tabIndex={0}
+          role="group"
+          aria-label="Clip-path canvas"
+          onPointerDownCapture={(e) => e.currentTarget.focus()}
           onDoubleClick={addPoint}
           onContextMenu={(e) => e.preventDefault()}
-          className={cn("relative aspect-square w-[min(100%,480px)] touch-none select-none", s.shape === "polygon" && "cursor-crosshair")}
+          className={cn("relative aspect-square w-[min(100%,480px)] touch-none select-none rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", s.shape === "polygon" && "cursor-crosshair")}
         >
           {s.ghost && <div className="pointer-events-none absolute inset-0 rounded-sm opacity-15" style={{ background: bg }} />}
           <div
