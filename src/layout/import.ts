@@ -189,9 +189,15 @@ function detectContent(el: Element): ContentKind | undefined {
   return undefined
 }
 
-function fromHtml(html: string, rules: SourceRule[]): ElNode | null {
+function fromHtml(html: string, rules: SourceRule[], warnings: string[]): ElNode | null {
   const doc = new DOMParser().parseFromString(html, "text/html")
   const isNode = (el: Element) => STRUCTURAL.has(el.tagName.toLowerCase()) || (el.classList.length > 0 && !["p", "h1", "h2", "h3", "h4", "h5", "h6", "img", "button", "a", "span", "li", "ul", "ol", "svg"].includes(el.tagName.toLowerCase()))
+  const warnSkipped = (elements: Element[], parent: string) => {
+    const skipped = elements.filter((el) => !isNode(el) && !["SCRIPT", "STYLE"].includes(el.tagName))
+    if (skipped.length === 0) return
+    const tags = Array.from(new Set(skipped.map((el) => `<${el.tagName.toLowerCase()}>`))).join(", ")
+    warnings.push(`HTML import skipped ${skipped.length} unsupported direct child element${skipped.length === 1 ? "" : "s"} (${tags}) in ${parent}; they were not imported as separate layout nodes`)
+  }
   const build = (el: Element): ElNode => {
     const kids = Array.from(el.children).filter(isNode)
     const inlineAttr = el.getAttribute("style")
@@ -208,16 +214,21 @@ function fromHtml(html: string, rules: SourceRule[]): ElNode | null {
         return false
       }
     }
+    const styleAt = (bp: number) => mergeStyles(rules, safeMatch, bp, inline)
+    if (kids.length > 0 || [0, ...rules.map((r) => r.bp)].some((bp) => /grid|flex/.test(styleAt(bp).display ?? ""))) {
+      warnSkipped(Array.from(el.children), `<${el.tagName.toLowerCase()}>`)
+    }
     return {
       name: el.classList[0] ?? el.id ?? el.tagName.toLowerCase(),
       children: kids.map(build),
-      styleAt: (bp) => mergeStyles(rules, safeMatch, bp, inline),
+      styleAt,
       content: kids.length === 0 ? detectContent(el) : undefined,
     }
   }
   const candidates = Array.from(doc.body.children).filter((el) => !["SCRIPT", "STYLE"].includes(el.tagName))
   if (candidates.length === 0) return null
   if (candidates.length === 1) return build(candidates[0])
+  warnSkipped(candidates, "the HTML root")
   return {
     name: "root",
     children: candidates.filter(isNode).map(build),
@@ -436,7 +447,7 @@ export function importLayout(cssInput: string, htmlInput: string): ImportResult 
   const trimmed = css.trim()
   if (trimmed && !trimmed.includes("{")) css = `.layout { ${trimmed} }`
   const rules = readRules(css, warnings)
-  const tree = html.trim() ? fromHtml(html, rules) : fromCss(rules, warnings)
+  const tree = html.trim() ? fromHtml(html, rules, warnings) : fromCss(rules, warnings)
   if (!tree) throw new Error("No container with display: grid or display: flex found")
 
   const bps = Array.from(new Set([0, ...rules.map((r) => r.bp)])).sort((a, b) => a - b)
