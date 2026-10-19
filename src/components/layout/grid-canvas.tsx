@@ -226,14 +226,19 @@ export function GridCanvas(p: GridCanvasProps) {
         {overlay &&
           Array.from({ length: nRows }, (_, r) =>
             Array.from({ length: nCols }, (_, c) => (
-              <div
+              <button
                 key={`${r}-${c}`}
+                type="button"
+                aria-label={`Create item at row ${r + 1}, column ${c + 1}`}
                 data-cell=""
                 data-col={c}
                 data-row={r}
                 onPointerDown={(e) => startCreate(e, { c, r })}
+                onClick={(e) => {
+                  if (e.detail === 0) p.onCreate({ c1: c + 1, c2: c + 2, r1: r + 1, r2: r + 2 })
+                }}
                 onDoubleClick={() => p.onCreate({ c1: c + 1, c2: c + 2, r1: r + 1, r2: r + 2 })}
-                className="min-h-6 min-w-0 cursor-crosshair rounded-md border border-dashed border-foreground/15 transition-colors hover:border-primary/40 hover:bg-primary/5"
+                className="min-h-6 min-w-0 cursor-crosshair rounded-md border border-dashed border-foreground/15 transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 style={{ gridColumn: c + 1, gridRow: r + 1, justifySelf: "stretch", alignSelf: "stretch" }}
               />
             )),
