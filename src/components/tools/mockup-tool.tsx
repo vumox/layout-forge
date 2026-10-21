@@ -391,6 +391,7 @@ export function MockupTool() {
   const startMove = (e: ReactPointerEvent, i: Item) => {
     if (e.button !== 0) return
     e.stopPropagation()
+    ;(e.currentTarget as HTMLElement).focus()
     setSelId(i.id)
     const [px, py] = toStage(e)
     dragRef.current = { kind: "move", id: i.id, px, py, ox: i.x, oy: i.y, moved: false }
@@ -498,6 +499,7 @@ export function MockupTool() {
         return
       }
       if (!sel) return
+      if (!stageRef.current?.contains(e.target as Node)) return
       if (mod && key === "d") {
         e.preventDefault()
         duplicate(sel.id)
@@ -607,7 +609,19 @@ export function MockupTool() {
       <div
         key={i.id}
         data-item={i.id}
+        role="button"
+        tabIndex={i.locked ? -1 : 0}
+        aria-label={i.name}
+        aria-pressed={isSel}
+        aria-disabled={i.locked ? true : undefined}
         onPointerDown={(e) => startMove(e, i)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            setSelId(i.id)
+          }
+        }}
+        className="outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         style={{ position: "absolute", ...p, transform: `rotate(${i.rot}deg)`, opacity: i.opacity, display: i.hidden ? "none" : undefined, pointerEvents: i.locked ? "none" : "auto", cursor: dragging ? "grabbing" : "grab" }}
       >
         <div
@@ -945,6 +959,8 @@ export function MockupTool() {
         <div style={{ width: W * fit, height: H * fit }}>
           <div
             ref={stageRef}
+            role="region"
+            aria-label="Mockup stage"
             onPointerDown={() => setSelId(null)}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
